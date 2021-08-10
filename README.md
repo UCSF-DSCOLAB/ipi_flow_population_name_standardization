@@ -66,4 +66,4 @@ Some WSPs may generate "stain" names that are five digit numbers instead of the 
 
 1. Open up the WSP file.
 2. Check for `<SampleNode>` nodes where `name=#`, i.e. `name=61229`. This node will also have a `sampleID` reference. For example, `<SampleNode name="61229.fcs"  annotation=""  owningGroup=""  expanded="0"  sortPriority="10"  count="500000"  sampleID="1" >`.
-3. Search for a `<DataSet>` node with the matching `sampleID`, and you will find the right FCS file and stain for the given numeric sequence. i.e. `<DataSet uri="file:IPIADR002_T1_flow_dc.fcs"  sampleID="1" />`
+3. Search for a `<DataSet>` node with the matching `sampleID`, and you will find the right FCS file and stain for the given numeric sequence. This should be sibling to the `<SampleNode>` node from step 2. i.e. `<DataSet uri="file:IPIADR002_T1_flow_dc.fcs"  sampleID="1" />`
