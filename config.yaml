@@ -1,0 +1,238 @@
+logging:
+  detail : 1 # 0 gives minimal detail, 1 gives details on sample-level things, 2 gives detail on population-level things
+methods:
+  write_version_info:
+    fcs_stain_files : {}
+    chan_alias_csv_loc : "/Users/user/stain_fluorAlias_cookie_monster.csv"
+    do_chan_from_csv : true
+    config :
+    wsp_file : "/Users/user/IPIREF115_Final.wspt"
+    chan_dict_header : "cookie_monster"
+    stain_version_info_dir : "./stain_version_info_test"
+    experiment_type : "facs"
+  process:
+    do_preprocessing : true
+    do_comp_type_process : false, # Should the seen data by the algorithms be the acqusition compensated (false) or manual compensated? (true)
+    do_overwrite : false, # If there are duplicate folders in the STAIN_DATA, then this will skip doing compensation for these.
+    try_stains : #<stain names, as are created from the template .wsp file used>
+    do_testingLimits : true
+  train:
+    data_trainTest_path :
+    train_style : "all_samples"
+    start_pop : "live"
+    train_alg_type : "ETr" # ["SGDr","ETr","RFr","ADABr","SVr","MLPr","TORCHr"]
+    use_parent_mask : true
+    pred_plot : true
+    without_live : false
+    try_stains : #<stain names>; if none, then it does all available
+    skip_train : 1
+    preprocess_type : ACQ_PREP3_DATA
+    start_stain_pop : [0,0]
+    do_interProcessing : true
+    do_testingLimits : true
+  predict:
+    test_dir :
+    use_threshs : ["opt", .3, .5, .8]
+    training_run :
+    stains :
+    do_with_wsp :
+    do_preload_popAlgs : false
+    do_stain_dir_separated : false
+    do_interProcessing : true
+    do_all_available_fcs : true
+    start_pop : "live"
+    do_testingLimits : true
+  metrics:
+    input_dir :
+    output_dir :
+    start_pop : "live"
+process_args:
+  INTERPROCESS_PEAKFIT1: &INTERPROCESS_PEAKFIT1
+  - kwargs:
+      cols: all
+      tails: [rZ#2, rZ#64]
+      test_plots: false
+      precision: 3
+    name: PF1
+    process_type: peak_fitting
+  INTERPROCESS_TRANSFORM1: &INTERPROCESS_TRANSFORM1
+  - kwargs:
+      tcols: [[FSC-A,FSC-W],[FSC-A,FSC-H]]
+      tsmxs: [[45.0],[45.0]]
+      tails: [rZ#2, rZ#64]
+      test_plots: false
+      unit: degree
+      precision: 3
+    name: ROT1
+    process_type: transform
+  INTERPROCESS_TRANSFORM2: &INTERPROCESS_TRANSFORM2
+  - kwargs:
+      cols: all
+      tails: [rZ#2, rZ#64]
+      test_plots: false
+      precision: 3
+    name: PF1
+    process_type: peak_fitting
+  - kwargs:
+      tcols: [[FSC-A,FSC-W],[FSC-A,FSC-H]]
+      tsmxs: [[45.0],[45.0]]
+      tails: [rZ#2, rZ#64]
+      test_plots: false
+      unit: degree
+      precision: 3
+    name: ROT1
+    process_type: transform
+  POP_INTERPROCESSING:
+    #singlecell*: *INTERPROCESS_TRANSFORM1
+    #live*: *INTERPROCESS_PEAKFIT1
+    live*: *INTERPROCESS_TRANSFORM2
+    cd45*: *INTERPROCESS_PEAKFIT1
+  PREPROCESSING3_KWARGS: &PREPROCESSING3_KWARGS
+    deprecated_version: -1
+    gauss_bins: 1000
+    gauss_fitTails: [rZ#2, rZ#64]
+    gauss_useCols: laser_columns
+    kde_events: 1024
+    kde_useCols: [all, laser_columns]
+    laser_ignore_cols: [Time, FSC, SSC]
+    output_raw: false
+    precision: 3
+    process_types: [z, s, zu, su]
+    rolling_windows: [2, 64]
+    rw_ignore_cols: [Time]
+    subsample: null
+    transform_type: log
+  PREPROCESSING_CALCS:
+  - arguments: *PREPROCESSING3_KWARGS
+    in_data: null
+    method: preprocessing3
+    name: ACQ_PREP3_DATA
+  TESTING_LIMITS:
+    try_stains: [Stain 1]
+    pred_max_events: 10000
+    pred_max_fcs: 2
+    pred_max_samples: 2
+    process_samples_test: 2
+    process_samples_train: 2
+    testEnd: 10000
+    testSkip: 1
+    testStart: 0
+    train_max_events: 10000
+    train_test_samples: 2
+    train_train_samples: 2
+paths:
+  # directory locations
+  # location of the stain version information. The default is found inside the repo folder
+  folder_names:
+    SAVE_NAME : "test_aliasNames1"
+    VERSION_HEAD : "11_5"
+    CHAN_DICT_HEAD : "cookie_monster"
+    CHAN_PARAM_NAME : "muIMX1-cytof_param_marker_dict"
+    SAMPLE_START_STR : "IPI"
+    TRAINING_SAVE_DIR : "data_algs"
+    OUTPUT_PRED_DIR : "pred_counts"
+    OUTPUT_POPRATIOS_DIR : "pop_ratios"
+    LOG_DIR : "logs"
+    CONFIG_DIR : "configs"
+    SAMPLEORDER_DIR : "sample_orders"
+    SAMPLE_START_STR : "IPI"
+  folder_paths:
+    STAINVERSIONINFO_DIR : "./stain_version_info_test/"
+    # directory where the directories referenced by the scripts are to be found/created, using path joining commands
+    HOME_DIR : /Users/user
+    # directory containing samples with associated wsp's and fcs's for training
+    TRAIN_FROM_DIR : /Users/user # path to wsp/fcs to be used in training
+    # directory to look in to make predictions on ungated fcs's
+    PRED_ON_DIR : /Users/user
+
+sample_order:
+  TRAINING_SAMPLES:
+  TESTING_SAMPLES:
+  PREDICTING_SAMPLES:
+
+experiment:
+  ASSAY: "flow"
+  CHANNELS: [APC-eFluor780-A, PerCPeFluor710-A, eFluor450-A, BV650-A, PE-Cy7(yg)-A,
+                    FITC-A, Aqua-A, PE(yg)-A, BV711-A, Alexa Fluor 647-A, Alexa Fluor 700-A, BV605-A,
+                    BV786-A, PE-Cy7-A, BV785-A, AmCyan-A, Red A-A, Violet B-A, Violet F-A, Blue A-A,
+                    YG A-A, Blue B-A, YG D-A, Violet C-A, Violet A-A, Red B-A, Violet E-A, APC-A, Qdot 605-A,
+                    Red C-A, Violet D-A, YG C-A, UV C-A, UV A-A, Red A, Violet B, Violet F,
+                    Blue A, YG A, Blue B, YG D, Violet C, Violet A, Red B, Violet E, Red C, Violet D,
+                    YG C, UV C, UV A]
+  STAINS_ALL: &STAINS_ALL [treg, nktb, sort, dc, innate, Stain 1, Stain 2, Stain 3, Stain
+      4, Stain 5, '1', '2', '3', '4', '5']
+  STAINS_CELLS: &STAINS_CELLS [treg, nktb, sort, dc, innate]
+  STAINS_NUMS: &STAINS_NUMS ['1', '2', '3', '4', '5']
+  STAINS_STAINS: &STAINS_STAINS [Stain 1, Stain 2, Stain 3, Stain 4, Stain 5]
+  STAIN_STANDARD_CELL: {treg: treg, nktb: nktb, sort: sort, dc: dc, innate: innate,
+    Stain 1: treg, Stain 2: nktb, Stain 3: sort, Stain 4: dc, Stain 5: innate, stain 1: treg,
+    stain 2: nktb, stain 3: sort, stain 4: dc, stain 5: innate, '1': treg, '2': nktb,
+    '3': sort, '4': dc, '5': innate, 1: treg, 2: nktb, 3: sort, 4: dc, 5: innate}
+  STAIN_STANDARD_INT: {treg: 1, nktb: 2, sort: 3, dc: 4, innate: 5, Stain 1: 1, Stain 2: 2,
+    Stain 3: 3, Stain 4: 4, Stain 5: 5, stain 1: 1, stain 2: 2, stain 3: 3, stain 4: 4,
+    stain 5: 5, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5}
+  STAIN_STANDARD_STAIN: {treg: Stain 1, nktb: Stain 2, sort: Stain 3, dc: Stain 4, innate: Stain
+      5, Stain 1: Stain 1, Stain 2: Stain 2, Stain 3: Stain 3, Stain 4: Stain 4, Stain 5: Stain
+      5, stain 1: Stain 1, stain 2: Stain 2, stain 3: Stain 3, stain 4: Stain 4, stain 5: Stain
+      5, '1': Stain 1, '2': Stain 2, '3': Stain 3, '4': Stain 4, '5': Stain 5, 1: Stain
+      1, 2: Stain 2, 3: Stain 3, 4: Stain 4, 5: Stain 5}
+  POP_PARSE_STAINS:
+    - *STAINS_STAINS
+    - *STAINS_CELLS
+  STAIN_SYNONYMNS:
+    treg: [treg, '1', 1, Stain 1, stain 1]
+    nktb: [nktb, '2', 2, Stain 2, stain 2]
+    sort: [sort, '3', 3, Stain 3, stain 3]
+    dc: [dc, '4', 4, Stain 4, stain 4]
+    innate: [innate, '5', 5, Stain 5, stain 5]
+    Stain 1: [treg, '1', 1, Stain 1, stain 1]
+    Stain 2: [nktb, '2', 2, Stain 2, stain 2]
+    Stain 3: [sort, '3', 3, Stain 3, stain 3]
+    Stain 4: [dc, '4', 4, Stain 4, stain 4]
+    Stain 5: [innate, '5', 5, Stain 5, stain 5]
+    stain 1: [treg, '1', 1, Stain 1, stain 1]
+    stain 2: [nktb, '2', 2, Stain 2, stain 2]
+    stain 3: [sort, '3', 3, Stain 3, stain 3]
+    stain 4: [dc, '4', 4, Stain 4, stain 4]
+    stain 5: [innate, '5', 5, Stain 5, stain 5]
+    '1': [treg, '1', 1, Stain 1, stain 1]
+    '2': [nktb, '2', 2, Stain 2, stain 2]
+    '3': [sort, '3', 3, Stain 3, stain 3]
+    '4': [dc, '4', 4, Stain 4, stain 4]
+    '5': [innate, '5', 5, Stain 5, stain 5]
+    1: [treg, '1', 1, Stain 1, stain 1]
+    2: [nktb, '2', 2, Stain 2, stain 2]
+    3: [sort, '3', 3, Stain 3, stain 3]
+    4: [dc, '4', 4, Stain 4, stain 4]
+    5: [innate, '5', 5, Stain 5, stain 5]
+
+definitions:
+  naming:
+    pop_gates:
+      SAMPLE_SEP : "_"
+    processing:
+      INTER_FINAL_TAIL : "."
+      INTER_NAME_SEP : "*"
+      INTER_PROC_SEP : ">"
+      CALC_CALC_SEP : "&"
+      PRM_CALC_SEP : "&"
+      PRM_PRM_SEP : "!"
+      LINEAGE_SEP : "@"
+    fcs_output:
+      FCS_VAL_SEP : "%"
+      FCS_BOOL_SEP : "!"
+    csv_output:
+      DF_VAL_SEP : "#"
+      ALG_PRED_TAIL : "ALG_PRED"
+      FLOWJO_COUNT_TAIL : "FLOWJO_COUNT"
+      NUM_COUNT_TAIL : "NUM_COUNT"
+      DENOM_COUNT_TAIL : "DENOM_COUNT"
+      COUNT_RATIO_TAIL : "COUNT_RATIO"
+  file_reading:
+    INFO_SEP : "_"
+    FCS_NAME_FORMAT : "INDIV_TISSUE_RUN"
+    WSP_NAME_FORMAT : "INDIV"
+    FCS_SHARE : "INDIV"
+    WSP_SHARE : "INDIV"
+    FCS_WSP_SHARE : "INDIV"
+    STAIN_OVERRIDE :
