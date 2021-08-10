@@ -61,3 +61,9 @@ patient-IPIADR002-flojo_file_processed.wsp
  61229.fcs, stain: patient-IPIADR002-flojo_file_processed--61229.fcs
  61230.fcs, stain: patient-IPIADR002-flojo_file_processed--61230.fcs
 ```
+
+Some WSPs may generate "stain" names that are five digit numbers instead of the standard IPI stains (dc, innate, nktb, sort, and treg), as above. In these cases, you can determine the corresponding stain with the following steps:
+
+1. Open up the WSP file.
+2. Check for `<SampleNode>` nodes where `name=#`, i.e. `name=61229`. This node will also have a `sampleID` reference. For example, `<SampleNode name="61229.fcs"  annotation=""  owningGroup=""  expanded="0"  sortPriority="10"  count="500000"  sampleID="1" >`.
+3. Search for a `<DataSet>` node with the matching `sampleID`, and you will find the right FCS file and stain for the given numeric sequence. i.e. `<DataSet uri="file:IPIADR002_T1_flow_dc.fcs"  sampleID="1" />`
